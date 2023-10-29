@@ -115,7 +115,8 @@ class LeNet5_Dropout_bn(nn.Module):
         self.bn1 = nn.BatchNorm2d(6) 
         self.conv2 = nn.Conv2d(6, 16, 5)
         self.dropout2 = nn.Dropout(0.5)
-
+        self.dropout3 = nn.Dropout(0.5)
+        self.dropout4 = nn.Dropout(0.5)
         self.bn2 = nn.BatchNorm2d(16)
         self.bn3 = nn.BatchNorm1d(120)
 
@@ -135,8 +136,8 @@ class LeNet5_Dropout_bn(nn.Module):
         x = self.dropout2(x)
 
         x = x.view(x.size(0), -1)
-        x = F.relu(self.bn3(self.fc1(x)))
-        x = F.relu(self.bn4(self.fc2(x)))
+        x = self.dropout3(F.relu(self.bn3(self.fc1(x))))
+        x = self.dropout4(F.relu(self.bn4(self.fc2(x))))
         x = self.fc3(x)
 
         return x

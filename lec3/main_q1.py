@@ -62,7 +62,6 @@ if __name__ == '__main__':
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     else:
         device = "cpu"
-    optimizer_option = args.optimizer_option
     train_batch = args.train_batch
     test_batch = args.test_batch
     num_works = args.num_works
@@ -74,11 +73,11 @@ if __name__ == '__main__':
         # transforms.RandomCrop(32,padding=4),
         # transforms.RandomHorizontalFlip(p=0.5),
         transforms.ToTensor(),
-        transforms.Normalize((0.5,), (0.5,)) ,
+        # transforms.Normalize((0.5,), (0.5,)) ,
         ])
     transform_test = transforms.Compose([
         transforms.ToTensor(),
-        transforms.Normalize((0.5,), (0.5,)) ,
+        # transforms.Normalize((0.5,), (0.5,)) ,
         ])
     train_dataset =  torchvision.datasets.MNIST(root=args.data_path,train=True,download=True,transform = transform_train)
     test_dataset =  torchvision.datasets.MNIST(root=args.data_path,train=False,download=True,transform = transform_test)
@@ -93,9 +92,8 @@ if __name__ == '__main__':
 
     logging.info('data ready')
     #model
-    model = LeNet5_Dropout_bn()
-    if args.remove_normal:
-        remove_batch_norm(model)
+    model = LeNet5_BatchNorm_3()
+
     weight_decay = 5e-4
     momentum = 0.9
     optimizer = torch.optim.SGD(model.parameters(), lr=LR, momentum=momentum, weight_decay=weight_decay)
@@ -165,7 +163,7 @@ if __name__ == '__main__':
     #         logging.info(f"Variance: {module.running_var}")
     #         logging.info(f"Gamma (Weight): {module.weight.data}")
     #         logging.info(f"Beta (Bias): {module.bias.data}")
-    # plot_batchnorm_parameters(model,name_all)
+    plot_batchnorm_parameters(model,name_all)
 
 
 
