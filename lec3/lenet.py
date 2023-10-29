@@ -1,11 +1,12 @@
 import torch.nn as nn
 import torch.nn.functional as F
 
-class LeNet5_BatchNorm_all(nn.Module):
+class LeNet5_BatchNorm_2(nn.Module):
     def __init__(self):
-        super(LeNet5_BatchNorm_all, self).__init__()
+        super(LeNet5_BatchNorm_2, self).__init__()
 
         # Convolutional layers
+        
         self.conv1 = nn.Conv2d(1, 6, 5)  # 1 input channel, 6 output channels, 5x5 kernel
         self.bn1 = nn.BatchNorm2d(6)     # BatchNorm after 1st conv layer
 
@@ -19,6 +20,7 @@ class LeNet5_BatchNorm_all(nn.Module):
         self.fc3 = nn.Linear(84, 10)  # 10 classes for MNIST
 
     def forward(self, x):
+        
         x = self.bn1(F.relu(self.conv1(x)))
         x = F.max_pool2d(x, 2)
 
@@ -33,11 +35,12 @@ class LeNet5_BatchNorm_all(nn.Module):
 
         return x
 
-class LeNet5_BatchNorm(nn.Module):
+class LeNet5_BatchNorm_3(nn.Module):
     def __init__(self):
-        super(LeNet5_BatchNorm, self).__init__()
+        super(LeNet5_BatchNorm_3, self).__init__()
 
         # Convolutional layers
+        self.bn0 = nn.BatchNorm2d(1)
         self.conv1 = nn.Conv2d(1, 6, 5)  # 1 input channel, 6 output channels, 5x5 kernel
         self.bn1 = nn.BatchNorm2d(6)     # BatchNorm after 1st conv layer
 
@@ -51,7 +54,8 @@ class LeNet5_BatchNorm(nn.Module):
         self.fc3 = nn.Linear(84, 10)  # 10 classes for MNIST
 
     def forward(self, x):
-        x = F.relu(self.conv1(x))
+        x = self.bn0(x)
+        x = self.bn1(F.relu(self.conv1(x)))
         x = F.max_pool2d(x, 2)
 
         x = self.bn2(F.relu(self.conv2(x)))
@@ -65,6 +69,8 @@ class LeNet5_BatchNorm(nn.Module):
 
         return x
 
+
+
 class LeNet5_Dropout(nn.Module):
     def __init__(self):
         super(LeNet5_Dropout, self).__init__()
@@ -75,6 +81,8 @@ class LeNet5_Dropout(nn.Module):
 
         self.conv2 = nn.Conv2d(6, 16, 5)
         self.dropout2 = nn.Dropout(0.5)
+        self.dropout3 = nn.Dropout(0.5)
+        self.dropout4 = nn.Dropout(0.5)
 
         self.fc1 = nn.Linear(16 * 4 * 4, 120)
         self.fc2 = nn.Linear(120, 84)
@@ -91,8 +99,8 @@ class LeNet5_Dropout(nn.Module):
         x = self.dropout2(x)
 
         x = x.view(x.size(0), -1)
-        x = F.relu(self.fc1(x))
-        x = F.relu(self.fc2(x))
+        x = self.dropout3(F.relu(self.fc1(x)))
+        x = self.dropout4(F.relu(self.fc2(x)))
         x = self.fc3(x)
 
         return x

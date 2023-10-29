@@ -25,14 +25,12 @@ if __name__=='__main__':
     parser.add_argument('--test_batch', type=int, default=32)
     parser.add_argument('--data_path', type=str, default='./dataset_FashionMNIST', help='path to save the data')
     parser.add_argument('--device', type=str, default='gpu', help='optimizer of the model')
-    parser.add_argument('--optimizer_option', type=str, default='SGD', help='SGD, SGD_nesterov, Adagrad, Adadelta, Adam')
-    parser.add_argument('--remove_normal', type=bool, default=False, help='False: use normal, True: remove normal')
-    # parser.add_argument('--remove_normal', type=bool, default=False, help='False: use normal, True: remove normal')
-    # logging.basicConfig(level=logging.INFO,  
-    #                     filename='lr.log',
-    #                     filemode='a', 
-    #                     format='%(asctime)s - %(filename)s[line:%(lineno)d] - %(levelname)s: %(message)s',
-    #                     )
+    name_all = '2_1'
+    logging.basicConfig(level=logging.INFO,  
+                        filename=f'{name_all}.log',
+                        filemode='a', 
+                        format='%(asctime)s - %(filename)s[line:%(lineno)d] - %(levelname)s: %(message)s',
+                        )
 
     #load parmaters
     args = parser.parse_args()
@@ -42,7 +40,6 @@ if __name__=='__main__':
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     else:
         device = "cpu"
-    optimizer_option = args.optimizer_option
     train_batch = args.train_batch
     test_batch = args.test_batch
     num_works = args.num_works
@@ -50,7 +47,6 @@ if __name__=='__main__':
     # logging.info('paramaters set')
     model = MiniGoogLeNet()
     loss_fun = nn.CrossEntropyLoss()
-    optimizer = optim.SGD(model.parameters(), lr=0.01) 
     transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5,), (0.5,))])
     train_dataset = FashionMNIST(root=args.data_path, train=True, transform=transform, download=True)
     test_dataset = FashionMNIST(root=args.data_path, train=False, transform=transform, download=True)
@@ -60,6 +56,7 @@ if __name__=='__main__':
     losses = []
     length = len(train_loader)
     for lr in candidate_lrs:
+        optimizer = optim.SGD(model.parameters(), lr=lr)
         total_loss = 0
         for epoch in range(5):  # Train for 5 epochs
             for i, (images, labels) in enumerate(train_loader):

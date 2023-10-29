@@ -5,21 +5,20 @@ import torch.nn as nn
 import os
 from torch.utils.tensorboard import SummaryWriter
 from torch.autograd import Variable,Function
-import time
-from lenet import LeNet5_BatchNorm,LeNet5_Dropout,LeNet5_BatchNorm_all,LeNet5_Dropout_bn
+from lenet import LeNet5_BatchNorm_2,LeNet5_BatchNorm_3,LeNet5_Dropout_bn,LeNet5_Dropout
 import torchvision
 from torchvision import transforms
 import matplotlib.pyplot as plt
 import seaborn as sns
 import logging
 
-def plot_batchnorm_parameters(model):
+def plot_batchnorm_parameters(model,name_all):
     weights = []
     biases = []
     layer_names = []
 
     for name, module in model.named_modules():
-        if isinstance(module, nn.BatchNorm2d):
+        if isinstance(module, nn.BatchNorm2d) or isinstance(module, nn.BatchNorm1d):
             layer_names.append(name)
             weights.append(module.weight.data.cpu().numpy())
             biases.append(module.bias.data.cpu().numpy())
@@ -35,15 +34,9 @@ def plot_batchnorm_parameters(model):
     ax[1].set_xticklabels(layer_names)
 
     plt.tight_layout()
-    plt.savefig("squares.png") 
+    plt.savefig(f"{name_all}.png") 
 
 
-def remove_batch_norm(model):
-    for name, child in model.named_children():
-        if isinstance(child, nn.BatchNorm2d):
-            setattr(model, name, nn.Identity())
-        else:
-            remove_batch_norm(child)
 if __name__ == '__main__':
 
     print('start')
@@ -55,15 +48,12 @@ if __name__ == '__main__':
     parser.add_argument('--test_batch', type=int, default=100)
     parser.add_argument('--data_path', type=str, default='./dataset3', help='path to save the data')
     parser.add_argument('--device', type=str, default='gpu', help='optimizer of the model')
-    parser.add_argument('--optimizer_option', type=str, default='SGD', help='SGD, SGD_nesterov, Adagrad, Adadelta, Adam')
-    parser.add_argument('--remove_normal', type=bool, default=False, help='False: use normal, True: remove normal')
-    # parser.add_argument('--remove_normal', type=bool, default=False, help='False: use normal, True: remove normal')
+    name_all = '1_5'
     logging.basicConfig(level=logging.INFO,  
-                        filename='1_5.log',
+                        filename=f'{name_all}.log',
                         filemode='a', 
                         format='%(asctime)s - %(filename)s[line:%(lineno)d] - %(levelname)s: %(message)s',
                         )
-
     #load parmaters
     args = parser.parse_args()
     epochs = args.epoch
@@ -102,6 +92,7 @@ if __name__ == '__main__':
                                                num_workers=num_works)
 
     logging.info('data ready')
+    #model
     model = LeNet5_Dropout_bn()
     if args.remove_normal:
         remove_batch_norm(model)
@@ -115,7 +106,6 @@ if __name__ == '__main__':
     logging.info('start train')
     length_train = len(train_loader)
     length_test = len(test_loader)
-    total_start = time.time()
     #train
     correct_total = 0
     best_acc = 0
@@ -166,16 +156,16 @@ if __name__ == '__main__':
     logging.info(f"Final Train Accuracy: {train_accuracies[-1]}")
     logging.info(f"Final Test Accuracy: {test_accuracies[-1]}")
 
-    # Output BatchNorm Parameters
-    for name, module in model.named_modules():
-        if isinstance(module, nn.BatchNorm2d) or isinstance(module, nn.BatchNorm1d):
-            logging.info(f"\nLayer: {name}")
-            logging.info(f"parameters: {module.state_dict()}")
-            logging.info(f"Mean: {module.running_mean}")
-            logging.info(f"Variance: {module.running_var}")
-            logging.info(f"Gamma (Weight): {module.weight.data}")
-            logging.info(f"Beta (Bias): {module.bias.data}")
-    # plot_batchnorm_parameters(model)
+    # # Output BatchNorm Parameters
+    # for name, module in model.named_modules():
+    #     if isinstance(module, nn.BatchNorm2d) or isinstance(module, nn.BatchNorm1d):
+    #         logging.info(f"\nLayer: {name}")
+    #         logging.info(f"parameters: {module.state_dict()}")
+    #         logging.info(f"Mean: {module.running_mean}")
+    #         logging.info(f"Variance: {module.running_var}")
+    #         logging.info(f"Gamma (Weight): {module.weight.data}")
+    #         logging.info(f"Beta (Bias): {module.bias.data}")
+    # plot_batchnorm_parameters(model,name_all)
 
 
 
