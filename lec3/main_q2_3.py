@@ -41,11 +41,6 @@ if __name__=='__main__':
     else:
         device = "cpu"
     name_all = args.name_all
-    # logging.basicConfig(level=logging.INFO,  
-    #                     filename=f'{name_all}.log',
-    #                     filemode='a', 
-    #                     format='%(asctime)s - %(filename)s[line:%(lineno)d] - %(levelname)s: %(message)s',
-    #                     )
     transform = transforms.Compose([
         transforms.ToTensor(),
         transforms.Normalize((0.5,), (0.5,))
@@ -60,11 +55,7 @@ if __name__=='__main__':
     criterion = nn.CrossEntropyLoss()
 
     train_loss = []
-    # val_loss = []
-    # train_accuracy = []
-    # val_accuracy = []
     length = len(train_loader)
-    # batch_sizes = [2, 4, 8, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384]
     for epoch in range(epochs):
         model.train()
         running_loss = 0.0
@@ -83,12 +74,9 @@ if __name__=='__main__':
                 loss.backward()
                 optimizer.step()
                 batch_target = batch_target*2
-                # _, predicted = outputs.max(1)
                 total_train += labels.size(0)
-                # correct_train += predicted.eq(labels).sum().item()
                 running_loss += loss.item()
             batch_count += inputs.shape[0]
-        # train_accuracy.append(100. * correct_train / total_train)
         train_loss.append(running_loss / train_num)
 
 
