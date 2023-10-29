@@ -48,14 +48,17 @@ if __name__ == '__main__':
     parser.add_argument('--test_batch', type=int, default=100)
     parser.add_argument('--data_path', type=str, default='./dataset3', help='path to save the data')
     parser.add_argument('--device', type=str, default='gpu', help='optimizer of the model')
-    name_all = '1_5'
+    parser.add_argument('--name_all', type=str, default='gpu', help='optimizer of the model')
+
+
+    #load parmaters
+    args = parser.parse_args()
+    name_all = args.name_all
     logging.basicConfig(level=logging.INFO,  
                         filename=f'{name_all}.log',
                         filemode='a', 
                         format='%(asctime)s - %(filename)s[line:%(lineno)d] - %(levelname)s: %(message)s',
                         )
-    #load parmaters
-    args = parser.parse_args()
     epochs = args.epoch
     device = args.device
     if device =='gpu' or device=='GPU':
@@ -154,15 +157,15 @@ if __name__ == '__main__':
     logging.info(f"Final Train Accuracy: {train_accuracies[-1]}")
     logging.info(f"Final Test Accuracy: {test_accuracies[-1]}")
 
-    # # Output BatchNorm Parameters
-    # for name, module in model.named_modules():
-    #     if isinstance(module, nn.BatchNorm2d) or isinstance(module, nn.BatchNorm1d):
-    #         logging.info(f"\nLayer: {name}")
-    #         logging.info(f"parameters: {module.state_dict()}")
-    #         logging.info(f"Mean: {module.running_mean}")
-    #         logging.info(f"Variance: {module.running_var}")
-    #         logging.info(f"Gamma (Weight): {module.weight.data}")
-    #         logging.info(f"Beta (Bias): {module.bias.data}")
+    # Output BatchNorm Parameters
+    for name, module in model.named_modules():
+        if isinstance(module, nn.BatchNorm2d) or isinstance(module, nn.BatchNorm1d):
+            logging.info(f"\nLayer: {name}")
+            logging.info(f"parameters: {module.state_dict()}")
+            logging.info(f"Mean: {module.running_mean}")
+            logging.info(f"Variance: {module.running_var}")
+            logging.info(f"Gamma (Weight): {module.weight.data}")
+            logging.info(f"Beta (Bias): {module.bias.data}")
     plot_batchnorm_parameters(model,name_all)
 
 

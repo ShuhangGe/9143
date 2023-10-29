@@ -30,8 +30,8 @@ if __name__=='__main__':
     parser.add_argument('--name_all', type=str, default='9143', help='name of the experiment')
     
 
-    lr_min = 1e-9
-    lr_max = 1e-2
+    lr_min = 1e-3
+    lr_max = 1e-1
     #load parmaters
     args = parser.parse_args()
     epochs = args.epoch
