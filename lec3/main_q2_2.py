@@ -51,10 +51,11 @@ if __name__=='__main__':
 
     train_dataset = datasets.FashionMNIST(root=args.data_path, train=True, download=True, transform=transform)
     val_dataset = datasets.FashionMNIST(root=args.data_path, train=False, download=True, transform=transform)
-
+    model = MiniGoogLeNet()
+    model = model.to(device)
     train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.train_batch, shuffle=True)
     val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=args.test_batch, shuffle=False)
-    optimizer = torch.optim.Adam(model.parameters(), lr=lr_min)
+    optimizer = torch.optim.SGD(model.parameters(), lr=lr_min, momentum=0.9)
     
     scheduler = CyclicLR(optimizer, base_lr=lr_min, max_lr=lr_max, step_size_up=2000, mode='triangular2', gamma=0.99)
     criterion = nn.CrossEntropyLoss()
@@ -64,13 +65,14 @@ if __name__=='__main__':
     train_accuracy = []
     val_accuracy = []
 
-    for epoch in range(num_epochs):
+    for epoch in range(epochs):
         model.train()
         running_loss = 0.0
         correct_train = 0
         total_train = 0
         
         for i, (inputs, labels) in enumerate(train_loader):
+            inputs, labels = inputs.to(device), labels.to(device)
             outputs = model(inputs)
             loss = criterion(outputs, labels)
             optimizer.zero_grad()
@@ -94,6 +96,7 @@ if __name__=='__main__':
         
         with torch.no_grad():
             for inputs, labels in val_loader:
+                inputs, labels = inputs.to(device), labels.to(device)
                 outputs = model(inputs)
                 loss = criterion(outputs, labels)
                 
