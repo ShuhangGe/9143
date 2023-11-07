@@ -1,0 +1,1 @@
+python main_multigpu.py --gpu_num 2

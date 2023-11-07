@@ -8,6 +8,7 @@ import time
 from resnet import ResNet18
 import torchvision
 from torchvision import transforms
+from destributed_utlis import init_distributed_mode, dist, cleanup,reduce_value, is_main_process
 
 
 if __name__ == '__main__':
@@ -20,6 +21,7 @@ if __name__ == '__main__':
     parser.add_argument('--test_batch', type=int, default=100)
     parser.add_argument('--data_path', type=str, default='./dataset3', help='path to save the data')
     parser.add_argument('--device', type=str, default='gpu', help='optimizer of the model')
+    parser.add_argument('--gpu_num', type=int, default=1, help='num of gpu')
     #load parmaters
     args = parser.parse_args()
     epochs = args.epoch
@@ -65,6 +67,7 @@ if __name__ == '__main__':
     loss_fun = nn.CrossEntropyLoss()
 
     model = model.to(device)
+    model = torch.nn.DataParallel(model, device_ids=[i for i in range(args.gpu_num)], output_device=0)
     #print(model)
     print('start train')
     length_train = len(train_loader)
