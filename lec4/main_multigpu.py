@@ -94,9 +94,9 @@ if __name__ == '__main__':
             print('total_time: ',total_time)
             epoch_time+=total_time
             train_num+=1
-    print(f'total training time for 2 epoch: {total_time}')
-    print(f'total training time for 1 epoch: {total_time/2}')
-    print(f'Time for one nminibatch: {total_time/train_num}')
+    print(f'total training time for 2 epoch: {epoch_time}')
+    print(f'total training time for 1 epoch: {epoch_time/2}')
+    print(f'Time for one nminibatch: {epoch_time/train_num}')
         
         # #test
         # test_total = 0.0
