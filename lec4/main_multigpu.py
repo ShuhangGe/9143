@@ -90,12 +90,12 @@ if __name__ == '__main__':
             loss.backward()
             optimizer.step()
             end = time.time()
-            total_time = end - start
-            print('total_time: ',total_time)
-            epoch_time+=total_time
-            train_num+=1
-    print(f'total training time for 2 epoch: {epoch_time}')
-    print(f'total training time for 1 epoch: {epoch_time/2}')
+            if epoch >0:
+                total_time = end - start
+                print('total_time: ',total_time)
+                epoch_time+=total_time
+                train_num+=1
+    print(f'total training time for 1 epoch: {epoch_time}')
     print(f'Time for one nminibatch: {epoch_time/train_num}')
         
         # #test
