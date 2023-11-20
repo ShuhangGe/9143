@@ -9,4 +9,4 @@
 !*.sh
 !*.cu
 !*.h
-!Makefile
+!*.cpp
