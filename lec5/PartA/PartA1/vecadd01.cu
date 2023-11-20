@@ -11,7 +11,7 @@
 // Includes
 #include <stdio.h>
 #include "timer.h"
-#include "vecaddKernel.h"
+#include "vecaddKernel01.h"
 
 // Defines
 #define GridWidth 60
@@ -88,7 +88,7 @@ int main(int argc, char** argv)
     if (error != cudaSuccess) Cleanup(false);
 
     // Warm up
-    AddVectors<<<dimGrid, dimBlock>>>(d_A, d_B, d_C, ValuesPerThread);
+    AddVectors01<<<dimGrid, dimBlock>>>(d_A, d_B, d_C, ValuesPerThread);
     error = cudaGetLastError();
     if (error != cudaSuccess) Cleanup(false);
     cudaThreadSynchronize();
@@ -98,7 +98,7 @@ int main(int argc, char** argv)
     start_timer();
 
     // Invoke kernel
-    AddVectors<<<dimGrid, dimBlock>>>(d_A, d_B, d_C, ValuesPerThread);
+    AddVectors01<<<dimGrid, dimBlock>>>(d_A, d_B, d_C, ValuesPerThread);
     error = cudaGetLastError();
     if (error != cudaSuccess) Cleanup(false);
     cudaThreadSynchronize();
