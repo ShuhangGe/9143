@@ -2,7 +2,8 @@
 ### Instructor: Parijat Dubey
 ### Makefile for Part A Assignment 5
 
-SDK_INSTALL_PATH :=  /usr
+
+SDK_INSTALL_PATH :=  /usr/local/cuda
 NVCC=$(SDK_INSTALL_PATH)/bin/nvcc
 LIB       :=  -L$(SDK_INSTALL_PATH)/lib64 -L$(SDK_INSTALL_PATH)/samples/common/lib/linux/x86_64
 #INCLUDES  :=  -I$(SDK_INSTALL_PATH)/include -I$(SDK_INSTALL_PATH)/samples/common/inc
