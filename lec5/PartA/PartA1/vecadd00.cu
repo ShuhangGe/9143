@@ -88,6 +88,7 @@ int main(int argc, char** argv)
     if (error != cudaSuccess) Cleanup(false);
 
     // Warm up
+    printf("ValuesPerThread: %d\n", N); 
     AddVectors00<<<dimGrid, dimBlock>>>(d_A, d_B, d_C, ValuesPerThread);
     error = cudaGetLastError();
     if (error != cudaSuccess) Cleanup(false);
