@@ -1,9 +1,12 @@
 #include <iostream>
 #include <vector>
 #include <cudnn.h>
-#include <cuda_runtime.h>
+#include "timer.h"
+const int H = 1024;
+const int W = 1024;
+const int K = 64;
 
-float CheckSum(double* M) {
+float CheckSum(float* M) {
   float result = 0;
   for(int k = 0; k < K; k++) {
     for (int i = 0; i < W; ++i) {
@@ -85,8 +88,7 @@ int main() {
         fprintf(stderr, "CUDA error: %s\n", cudaGetErrorString(cudaStatus));
         // Handle error accordingly
     }
-    // Print the kernel execution time
-    std::cout << "Kernel Execution Time: " << milliseconds << " ms" << std::endl;
+
 
     // Compute checksum (sum of elements in 'output')
     // ...

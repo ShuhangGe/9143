@@ -3,7 +3,7 @@
 ### Makefile for Part A Assignment 5
 
 
-SDK_INSTALL_PATH :=  /usr/local/cuda
+SDK_INSTALL_PATH :=  /usr/local/cuda-11.3
 NVCC=$(SDK_INSTALL_PATH)/bin/nvcc
 CUDNN_PATH := cudnn
 LIB       :=  -L$(SDK_INSTALL_PATH)/lib64 -L$(SDK_INSTALL_PATH)/samples/common/lib/linux/x86_64  -L $(CUDNN_PATH)/lib64
