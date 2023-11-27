@@ -1,119 +1,87 @@
 #include <iostream>
+#include <vector>
 #include <cudnn.h>
+#include <cuda_runtime.h>
 
-// Error checking macro for CUDA and cuDNN calls
-#define checkCUDNN(expression)                                 \
-{                                                              \
-  cudnnStatus_t status = (expression);                         \
-  if (status != CUDNN_STATUS_SUCCESS) {                        \
-    std::cerr << "Error on line " << __LINE__ << ": "          \
-              << cudnnGetErrorString(status) << std::endl;     \
-    std::exit(EXIT_FAILURE);                                   \
-  }                                                            \
-}
+
 
 int main() {
     cudnnHandle_t cudnn;
-    checkCUDNN(cudnnCreate(&cudnn));
+    cudnnCreate(&cudnn);
 
-    // Define tensor dimensions and data types here
-    // For example, let's define some arbitrary dimensions
-    int batch_size = 1, channels = 3, height = 128, width = 128;
-    int filter_height = 3, filter_width = 3, output_channels = 10;
+    // Define tensor sizes and filter dimensions
+    // Example: input = 1x3x128x128, filter = 10x3x3x3
+    int batch_size = 1, channels = 3, height = 1024, width = 1024;
+    int filter_height = 3, filter_width = 3, output_channels = 64;
 
-    // Create and set tensor descriptors
-    cudnnTensorDescriptor_t input_descriptor;
+    // Create and set descriptors
+    cudnnTensorDescriptor_t input_descriptor, output_descriptor;
     cudnnFilterDescriptor_t filter_descriptor;
-    cudnnTensorDescriptor_t output_descriptor;
     cudnnConvolutionDescriptor_t convolution_descriptor;
 
-    checkCUDNN(cudnnCreateTensorDescriptor(&input_descriptor));
-    checkCUDNN(cudnnSetTensor4dDescriptor(input_descriptor, 
-                                          CUDNN_TENSOR_NCHW, 
-                                          CUDNN_DATA_FLOAT, 
-                                          batch_size, channels, height, width));
+    cudnnCreateTensorDescriptor(&input_descriptor);
+    cudnnCreateTensorDescriptor(&output_descriptor);
+    cudnnCreateFilterDescriptor(&filter_descriptor);
+    cudnnCreateConvolutionDescriptor(&convolution_descriptor);
 
-    checkCUDNN(cudnnCreateFilterDescriptor(&filter_descriptor));
-    checkCUDNN(cudnnSetFilter4dDescriptor(filter_descriptor, 
-                                          CUDNN_DATA_FLOAT, 
-                                          CUDNN_TENSOR_NCHW, 
-                                          output_channels, channels, filter_height, filter_width));
+    cudnnSetTensor4dDescriptor(input_descriptor, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, batch_size, channels, height, width);
+    cudnnSetFilter4dDescriptor(filter_descriptor, CUDNN_DATA_FLOAT, CUDNN_TENSOR_NCHW, output_channels, channels, filter_height, filter_width);
+    cudnnSetConvolution2dDescriptor(convolution_descriptor, 0, 0, 1, 1, 1, 1, CUDNN_CONVOLUTION, CUDNN_DATA_FLOAT);
 
-    checkCUDNN(cudnnCreateTensorDescriptor(&output_descriptor));
-
-    checkCUDNN(cudnnCreateConvolutionDescriptor(&convolution_descriptor));
-    checkCUDNN(cudnnSetConvolution2dDescriptor(convolution_descriptor, 
-                                               1, 1, 1, 1, 1, 1, 
-                                               CUDNN_CONVOLUTION, CUDNN_DATA_FLOAT));
-
-    // Find the dimensions of the convolution output
+    // Find the dimensions of the output tensor
     int n, c, h, w;
-    checkCUDNN(cudnnGetConvolution2dForwardOutputDim(convolution_descriptor, 
-                                                     input_descriptor, 
-                                                     filter_descriptor, 
-                                                     &n, &c, &h, &w));
+    cudnnGetConvolution2dForwardOutputDim(convolution_descriptor, input_descriptor, filter_descriptor, &n, &c, &h, &w);
+    cudnnSetTensor4dDescriptor(output_descriptor, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, n, c, h, w);
 
-    checkCUDNN(cudnnSetTensor4dDescriptor(output_descriptor, 
-                                          CUDNN_TENSOR_NCHW, 
-                                          CUDNN_DATA_FLOAT, 
-                                          n, c, h, w));
-
-    // Allocate memory for input, filter, and output
-    float *input, *filter, *output;
+    // Allocate memory for input, output, and filter
+    float *input, *output, *filter;
     cudaMalloc(&input, batch_size * channels * height * width * sizeof(float));
-    cudaMalloc(&filter, output_channels * channels * filter_height * filter_width * sizeof(float));
     cudaMalloc(&output, n * c * h * w * sizeof(float));
+    cudaMalloc(&filter, output_channels * channels * filter_height * filter_width * sizeof(float));
 
-    // Initialize memory - omitted for brevity
+    // Initialize memory for input and filter (omitted for brevity)
 
-    // Choose the fastest convolution algorithm
-    cudnnConvolutionFwdAlgo_t convolution_algorithm;
-    checkCUDNN(cudnnGetConvolutionForwardAlgorithm(cudnn, 
-                                                   input_descriptor, 
-                                                   filter_descriptor,
-                                                   convolution_descriptor, 
-                                                   output_descriptor,
-                                                   CUDNN_CONVOLUTION_FWD_PREFER_FASTEST, 
-                                                   0, 
-                                                   &convolution_algorithm));
+    // Selecting the convolution algorithm (CUDNN_CONVOLUTION_FWD_PREFER_FASTEST)
+    cudnnConvolutionFwdAlgoPerf_t convolution_algorithm;
+    cudnnConvolutionFwdAlgo_t algo = convolution_algorithm.algo;
 
-    // Allocate workspace for the convolution
+    int returnedAlgoCount;
+    cudnnGetConvolutionForwardAlgorithm_v7(cudnn, input_descriptor, filter_descriptor, convolution_descriptor, output_descriptor, 1, &returnedAlgoCount, &convolution_algorithm);
+
+    // Allocate workspace for the selected algorithm
     size_t workspace_bytes = 0;
-    checkCUDNN(cudnnGetConvolutionForwardWorkspaceSize(cudnn, 
-                                                       input_descriptor, 
-                                                       filter_descriptor,
-                                                       convolution_descriptor, 
-                                                       output_descriptor, 
-                                                       convolution_algorithm, 
-                                                       &workspace_bytes));
-
-    void *workspace;
-    cudaMalloc(&workspace, workspace_bytes);
+    cudnnGetConvolutionForwardWorkspaceSize(cudnn, input_descriptor, filter_descriptor, convolution_descriptor, output_descriptor, algo, &workspace_bytes);
+    void *workspace = nullptr;
+    if (workspace_bytes > 0) {
+        cudaMalloc(&workspace, workspace_bytes);
+    }
 
     // Perform the convolution
     float alpha = 1.0f, beta = 0.0f;
-    checkCUDNN(cudnnConvolutionForward(cudnn, 
-                                       &alpha, 
-                                       input_descriptor, 
-                                       input, 
-                                       filter_descriptor, 
-                                       filter, 
-                                       convolution_descriptor, 
-                                       convolution_algorithm, 
-                                       workspace, 
-                                       workspace_bytes, 
-                                       &beta, 
-                                       output_descriptor, 
-                                       output));
+    cudaEvent_t start, stop;
+    cudaEventCreate(&start);
+    cudaEventCreate(&stop);
 
-    // Compute checksum
+    cudaEventRecord(start);
+    cudnnConvolutionForward(cudnn, &alpha, input_descriptor, input, filter_descriptor, filter, convolution_descriptor, algo, workspace, workspace_bytes, &beta, output_descriptor, output);
+    cudaEventRecord(stop);
+
+    // Wait for the kernel to finish
+    cudaEventSynchronize(stop);
+    float milliseconds = 0;
+    cudaEventElapsedTime(&milliseconds, start, stop);
+
+    // Print the kernel execution time
+    std::cout << "Kernel Execution Time: " << milliseconds << " ms" << std::endl;
+
+    // Compute checksum (sum of elements in 'output')
     // ...
 
     // Cleanup
+    if (workspace) cudaFree(workspace);
     cudaFree(input);
-    cudaFree(filter);
     cudaFree(output);
-    cudaFree(workspace);
+    cudaFree(filter);
     cudnnDestroyTensorDescriptor(input_descriptor);
     cudnnDestroyTensorDescriptor(output_descriptor);
     cudnnDestroyFilterDescriptor(filter_descriptor);
