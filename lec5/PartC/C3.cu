@@ -3,7 +3,17 @@
 #include <cudnn.h>
 #include <cuda_runtime.h>
 
-
+float CheckSum(double* M) {
+  float result = 0;
+  for(int k = 0; k < K; k++) {
+    for (int i = 0; i < W; ++i) {
+      for (int j = 0; j < H; ++j) {
+        result += M[k * W * H + i * H + j];
+      }
+    }
+  }
+  return result;
+}
 
 int main() {
     cudnnHandle_t cudnn;
@@ -58,19 +68,23 @@ int main() {
 
     // Perform the convolution
     float alpha = 1.0f, beta = 0.0f;
-    cudaEvent_t start, stop;
-    cudaEventCreate(&start);
-    cudaEventCreate(&stop);
 
-    cudaEventRecord(start);
+    initialize_timer();
+    start_timer();
     cudnnConvolutionForward(cudnn, &alpha, input_descriptor, input, filter_descriptor, filter, convolution_descriptor, algo, workspace, workspace_bytes, &beta, output_descriptor, output);
-    cudaEventRecord(stop);
+    stop_timer();
 
-    // Wait for the kernel to finish
-    cudaEventSynchronize(stop);
-    float milliseconds = 0;
-    cudaEventElapsedTime(&milliseconds, start, stop);
-
+    double time = elapsed_time();
+    float checkSum = CheckSum(output);
+    // float checkSum = 0;
+    printf( "%lf, %lf, %lf\n", checkSum, time*1000);
+    
+    cudaError_t cudaStatus = cudaGetLastError();
+    fprintf(stderr, "CUDA error: %s\n", cudaGetErrorString(cudaStatus));
+    if (cudaStatus != cudaSuccess) {
+        fprintf(stderr, "CUDA error: %s\n", cudaGetErrorString(cudaStatus));
+        // Handle error accordingly
+    }
     // Print the kernel execution time
     std::cout << "Kernel Execution Time: " << milliseconds << " ms" << std::endl;
 
