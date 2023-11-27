@@ -10,3 +10,4 @@
 !*.cu
 !*.h
 !*.cpp
+!Makefile
